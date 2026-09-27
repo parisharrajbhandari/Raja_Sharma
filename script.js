@@ -14,15 +14,13 @@ document.addEventListener('DOMContentLoaded', () => {
         logoEl.alt = cfg.logo.alt;
     }
 
-    // --- Header: Person Details (shown when scrolled) ---
-    const personNameEl = document.getElementById('person-name');
-    const personTitleEl = document.getElementById('person-title');
-    if (personNameEl) personNameEl.textContent = cfg.person.fullName;
-    if (personTitleEl) personTitleEl.textContent = cfg.person.title;
 
-    // --- First Page: Company Name (shown on logo page) ---
+    // --- First Page: Company Name & Tagline (shown on logo page) ---
     const companyNameEl = document.getElementById('company-name');
     if (companyNameEl) companyNameEl.textContent = cfg.company.name;
+
+    const companyTaglineEl = document.getElementById('company-tagline');
+    if (companyTaglineEl) companyTaglineEl.textContent = cfg.company.tagline;
 
     // --- About Section ---
     const aboutHeadingEl = document.getElementById('about-heading');
@@ -42,6 +40,19 @@ document.addEventListener('DOMContentLoaded', () => {
     if (btnEmail) btnEmail.href = `mailto:${cfg.contact.email}`;
     if (btnLocation) btnLocation.href = cfg.contact.locationUrl;
     if (btnReview) btnReview.href = cfg.contact.reviewUrl;
+
+    // --- Profile Card (above social links) ---
+    const profileImg = document.getElementById('profile-img');
+    const profileName = document.getElementById('profile-name');
+    const profileTitle = document.getElementById('profile-title');
+    const profileCompany = document.getElementById('profile-company');
+    if (profileImg) {
+        profileImg.src = cfg.person.profilePhoto;
+        profileImg.alt = cfg.person.fullName;
+    }
+    if (profileName) profileName.textContent = cfg.person.fullName;
+    if (profileTitle) profileTitle.textContent = cfg.person.title;
+    if (profileCompany) profileCompany.textContent = cfg.company.name;
 
     // --- Social Media Icons (dynamically generated) ---
     const socialBar = document.getElementById('social-bar');
@@ -79,10 +90,12 @@ document.addEventListener('DOMContentLoaded', () => {
         if (scrollPosition > headerThreshold) {
             header.classList.add('scrolled');
             if (companyNameEl) companyNameEl.classList.add('hidden');
+            if (companyTaglineEl) companyTaglineEl.classList.add('hidden');
             if (scrollIndicator) scrollIndicator.classList.add('hidden');
         } else {
             header.classList.remove('scrolled');
             if (companyNameEl) companyNameEl.classList.remove('hidden');
+            if (companyTaglineEl) companyTaglineEl.classList.remove('hidden');
             if (scrollIndicator) scrollIndicator.classList.remove('hidden');
         }
 
@@ -99,8 +112,33 @@ document.addEventListener('DOMContentLoaded', () => {
     // ============================================================
     const saveContactBtn = document.getElementById('btn-save-contact');
     if (saveContactBtn) {
-        saveContactBtn.addEventListener('click', (e) => {
+        saveContactBtn.addEventListener('click', async (e) => {
             e.preventDefault();
+
+            // Convert profile photo to base64 for vCard
+            let photoBase64 = cfg.vcard.photoBase64 || '';
+            let photoType = 'PNG';
+            if (cfg.person.profilePhoto) {
+                try {
+                    const img = new Image();
+                    img.crossOrigin = 'anonymous';
+                    await new Promise((resolve, reject) => {
+                        img.onload = resolve;
+                        img.onerror = reject;
+                        img.src = cfg.person.profilePhoto;
+                    });
+                    const canvas = document.createElement('canvas');
+                    canvas.width = img.naturalWidth;
+                    canvas.height = img.naturalHeight;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0);
+                    const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+                    photoBase64 = dataUrl.split(',')[1];
+                    photoType = 'JPEG';
+                } catch (err) {
+                    console.warn('Could not convert profile photo for vCard:', err);
+                }
+            }
 
             // Build social URL lines dynamically
             const socialUrlLines = cfg.socials.map(s =>
@@ -119,13 +157,13 @@ document.addEventListener('DOMContentLoaded', () => {
             const vcardContent = [
                 'BEGIN:VCARD',
                 'VERSION:3.0',
-                // Company name as the primary display name for the contact
-                `FN:${cfg.company.name}`,
-                `N:${cfg.company.name};;;;`,
+                // Personal name as the primary display name for the contact
+                `FN:${cfg.person.fullName}`,
+                `N:${cfg.person.lastName};${cfg.person.firstName};${cfg.person.middleName || ''};;`,
                 `ORG:${cfg.company.name}`,
-                `TITLE:${cfg.person.fullName} - ${cfg.person.title}`,
+                `TITLE:${cfg.person.title}`,
                 `NOTE:${cfg.vcard.contactNote}`,
-                `PHOTO;ENCODING=b;TYPE=PNG:${cfg.vcard.photoBase64}`,
+                `PHOTO;ENCODING=b;TYPE=${photoType}:${photoBase64}`,
                 phoneLines,
                 `EMAIL;TYPE=PREF,INTERNET:${cfg.contact.email}`,
                 `URL;type=Location:${cfg.contact.locationUrl}`,
@@ -140,7 +178,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const url = window.URL.createObjectURL(blob);
             const link = document.createElement('a');
             link.href = url;
-            link.download = `${cfg.company.name.replace(/\s+/g, '_')}.vcf`;
+            link.download = `${cfg.person.fullName.replace(/\s+/g, '_')}.vcf`;
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);

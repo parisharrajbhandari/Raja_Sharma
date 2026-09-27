@@ -59,17 +59,17 @@ const BUSINESS_CONFIG = {
     // --- Logo ---
     logo: {
         src: "image/logo.png",
-        alt: "BYD logo",
+        alt: "gurau logo",
     },
 
     // --- vCard / Address Details ---
     vcard: {
         // This note will be saved with the contact on the device.
         // Customize it to include any info you want the recipient to see.
-        contactNote: "Proprietor of Euro Green Motors Pvt. Ltd. and Euro Green Auto Care Pvt. Ltd. An Authorized Dealer of BYD Auto Industry CO. Ltd. for Chitwan.",
-        addressStreet: "BYD Chitwan",
-        addressCity: "Chitwan",
-        addressState: "Bagmati",
+        contactNote: "We create all kinds of iron welding designs. Give your idea we create the product. Welding, falam",
+        addressStreet: "Gurau Grill Satar Udhog",
+        addressCity: "Kawasoti",
+        addressState: "Gandaki",
         addressCountry: "Nepal",
         // Base64-encoded photo for the vCard (PNG).
         // Replace this string to change the contact photo.
